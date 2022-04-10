@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic-Tac-Toe</title>
+    <script id="colorVS" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+        }
+    </script>
+
+    <script id="colorFS" type="x-shader/x-fragment">
+        precision mediump float;
+        
+        uniform vec4 uColor;
+        
+        void main() {
+            gl_FragColor = uColor;
+        }
+    </script>
+
+    <script id="texMapVS" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        attribute vec4 vNormal;
+        attribute vec2 vTexCoord;
+
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+
+        varying vec3 fNormal, fPosition;
+        varying vec2 fTexCoord; 
+        
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+
+            fNormal = (modelViewMatrix * vNormal).xyz;
+            fPosition = (modelViewMatrix * vPosition).xyz;
+
+            fTexCoord = vTexCoord;
+        }
+    </script>
+
+    <script id="texMapFS" type="x-shader/x-fragment">
+        precision mediump float;
+        
+        varying vec3 fNormal, fPosition;
+        varying vec2 fTexCoord;
+
+        uniform sampler2D texture;
+        uniform vec4 lightPos, ambientProduct, diffuseProduct, specularProduct;
+        uniform float shininess;
+
+        void main() {
+            vec3 N = normalize(fNormal);
+            vec3 L = normalize(lightPos.xyz);
+            float kd = max(dot(L, N), 0.0);
+            vec4 diffuse = kd * diffuseProduct;
+
+            vec3 V = normalize(fPosition);  // origin: camera position
+            vec3 H = normalize(L - V);
+            float ks = pow(max(dot(N, H), 0.0), shininess);
+            vec4 specular = ks * specularProduct;
+
+            if (dot(L, N) < 0.0)    specular = vec4(0.0, 0.0, 0.0, 1.0);
+
+            gl_FragColor = (ambientProduct + diffuse + specular) * texture2D(texture, fTexCoord);
+            gl_FragColor.a = 1.0;
+        }
+    </script>
+
+    <script type="text/javascript" src="Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="Common/initShaders.js"></script>
+    <script type="text/javascript" src="Common/MV.js"></script>
+    <script type="text/javascript" src="trackball.js"></script>
+    <script type="text/javascript" src="ticTacToe.js"></script>
+</head>
+    <style>
+        .button {
+        background-color: #555555; /* Green */
+        border: none;
+        color: white;
+        padding: 2px 10px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: bold;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        }
+        
+        .yellow {background-color: #FFD300;} 
+        .green {background-color: #07DA63;} 
+        .replay {background-color: #555555; padding: 2px 10px;}
+
+        .text {
+            color: #111; 
+            font-family: 'Helvetica Neue', sans-serif; 
+            font-size: 13px; 
+            font-weight: bold; 
+            letter-spacing: -1px; 
+            line-height: 1; 
+            text-align: center;
+        }
+    </style>
+</head>
+    <body>
+        <canvas id="gl-canvas" width="800" height="600">
+            Oops... your browser doesn't support the HTML5 canvas element!
+        </canvas><br>
+        <div style="width:800px; text-align:center;">
+            <button id="up" class="button">▲</button><br>
+            <button id="left" class="button">◀</button>
+            <button id="down" class="button">▼</button>
+            <button id="right" class="button">▶</button><br>
+        <p id="result" class="text">PRESS BUTTON:</p>
+            <button id="hit" class="button yellow">O</button>
+        </div>
+        <div>
+            <!-- <img src="images/logo.bmp" hidden>
+            <img src="images/monalisa.bmp" hidden>    
+            <img src="images/crate.bmp" hidden> -->
+            <img src="images/circle.jpg" hidden>
+            <img src="images/cross.jpg" hidden>
+            <img src="images/clear.jpg" hidden>
+        </div>
+    </body>
+</html>
